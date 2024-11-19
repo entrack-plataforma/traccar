@@ -138,6 +138,37 @@ public class TaipProtocolDecoder extends BaseProtocolDecoder {
         };
     }
 
+    protected Object decodeUnknown(Channel channel, SocketAddress remoteAddress, Object msg) {
+        String message = msg.toString();
+        String[] parts = message.split(";");
+
+        if (parts.length >= 3) {
+            try {
+                String messageIndex = parts[parts.length - 2];
+
+                String[] uniqueIdParts = parts[parts.length - 3].split("=");
+                if (uniqueIdParts.length < 2) {
+                    System.out.println("Invalid unique ID format");
+                    return null;
+                }
+                String uniqueId = uniqueIdParts[1];
+
+                DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, uniqueId);
+                String response = ">SAK;ID=" + uniqueId + ";" + messageIndex + "<";
+                if (deviceSession != null && channel != null) {
+                    channel.writeAndFlush(new NetworkMessage(response, remoteAddress));
+                }
+            } catch (Exception e) {
+                System.err.println("Error decoding message: " + e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("Invalid message format. Expected at least 3 parts.");
+        }
+        return null;
+    }
+
+
     @Override
     protected Object decode(
             Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
@@ -151,7 +182,7 @@ public class TaipProtocolDecoder extends BaseProtocolDecoder {
 
         Parser parser = new Parser(PATTERN, sentence);
         if (!parser.matches()) {
-            return null;
+            return decodeUnknown(channel, remoteAddress, msg);
         }
 
         Position position = new Position(getProtocolName());
