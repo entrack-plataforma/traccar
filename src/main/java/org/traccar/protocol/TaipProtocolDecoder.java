@@ -297,9 +297,9 @@ public class TaipProtocolDecoder extends BaseProtocolDecoder {
             if (channel != null) {
                 if (messageIndex != null) {
                     String response;
-                    if (messageIndex.startsWith("#IP")) {
+                    // if (messageIndex.startsWith("#IP")) {
                         response = ">SAK;ID=" + uniqueId + ";" + messageIndex + "<";
-                    } else {
+                    /* } else {
                         if (indexFirst) {
                             response = ">ACK;" + messageIndex + ";ID=" + uniqueId + ";";
                         } else {
@@ -309,7 +309,7 @@ public class TaipProtocolDecoder extends BaseProtocolDecoder {
                         boolean lantrix = model != null && model.toUpperCase().startsWith("LANTRIX");
                         int checksum = Checksum.xor(lantrix ? response : response + "*");
                         response += String.format("*%02X", checksum) + "<";
-                    }
+                    } */
                     channel.writeAndFlush(new NetworkMessage(response, remoteAddress));
                 } else {
                     channel.writeAndFlush(new NetworkMessage(uniqueId, remoteAddress));
